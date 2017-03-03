@@ -35,7 +35,7 @@ You can find the testing script at BiMPM/src/SentenceMatchDecoder.py
 To see all the **optional arguments**, just run
 > python BiMPM/src/SentenceMatchDecoder.py --help
 
-Here is an example of how to test you model:
+Here is an example of how to test your model:
 > python  BiMPM/src/SentenceMatchDecoder.py --in\_path test.tsv --word\_vec\_path wordvec.txt --mode prediction --model\_prefix models/SentenceMatch.sample --out\_path test.prediction
 
 The SentenceMatchDecoder.py can run in two modes:
