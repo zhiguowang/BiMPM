@@ -385,7 +385,7 @@ if __name__ == '__main__':
     parser.add_argument('--wo_max_attentive_match', default=False, help='Without max attentive matching.', action='store_true')
     parser.add_argument('--wo_char', default=False, help='Without character-composed embeddings.', action='store_true')
 
-    print("CUDA_VISIBLE_DEVICES " + os.environ['CUDA_VISIBLE_DEVICES'])
+#     print("CUDA_VISIBLE_DEVICES " + os.environ['CUDA_VISIBLE_DEVICES'])
     sys.stdout.flush()
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
