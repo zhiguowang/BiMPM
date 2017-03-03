@@ -3,7 +3,7 @@
 ## Description
 This repository includes the source code for natural language sentence matching. 
 Basically, the program will take two sentences as input, and predict a label for the two input sentences. 
-You can use this program to deal with tasks like *paraphrase identification*, *natural language inference*, *duplicate questions identification* et al. More details about the underneath model can be found in our [paper](https://arxiv.org/pdf/1702.03814.pdf). Please cite our paper when you use this program! :heart_eyes:
+You can use this program to deal with tasks like [paraphrase identification](https://aclweb.org/aclwiki/index.php?title=Paraphrase_Identification_%28State_of_the_art%29), [natural language inference](http://nlp.stanford.edu/projects/snli/), [duplicate questions identification](https://data.quora.com/First-Quora-Dataset-Release-Question-Pairs) et al. More details about the underneath model can be found in our [paper](https://arxiv.org/pdf/1702.03814.pdf). Please cite our paper when you use this program! :heart_eyes:
 
 ## Requirements
 * python 2.7
@@ -24,7 +24,7 @@ To see all the **optional arguments**, just run
 > python BiMPM/src/SentenceMatchTrainer.py --help
 
 Here is an example of how to train a very simple model:
-> python  BiMPM/src/SentenceMatchTrainer.py --train\_path train.tsv --dev\_path dev.tsv --test\_path test.tsv --word\_vec_path wordvec.txt --suffix sample --fix\_word\_vec --model\_dir models/ --MP\_dim 40 
+> python  BiMPM/src/SentenceMatchTrainer.py --train\_path train.tsv --dev\_path dev.tsv --test\_path test.tsv --word\_vec_path wordvec.txt --suffix sample --fix\_word\_vec --model\_dir models/ --MP\_dim 20 
 
 To get a better performance on your own datasets, you need to play with other arguments.
 
