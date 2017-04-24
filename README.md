@@ -26,7 +26,7 @@ To see all the **optional arguments**, just run
 Here is an example of how to train a very simple model:
 > python  BiMPM/src/SentenceMatchTrainer.py --train\_path train.tsv --dev\_path dev.tsv --test\_path test.tsv --word\_vec_path wordvec.txt --suffix sample --fix\_word\_vec --model\_dir models/ --MP\_dim 20 
 
-To get a better performance on your own datasets, you need to play with other arguments.
+To get a better performance on your own datasets, you need to play with other arguments. Here is one example of the command line [configuration](https://drive.google.com/file/d/0B0PlTAo--BnaQ3N4cXR1b0Z0YU0/view?usp=sharing) I used in my experiments.
 
 ## Testing
 You can find the testing script at BiMPM/src/SentenceMatchDecoder.py
