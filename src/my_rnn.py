@@ -9,14 +9,14 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import rnn_cell_impl as rnn_cell_impl
 from tensorflow.python.ops import tensor_array_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 from tensorflow.python.ops import rnn
 import tensorflow as tf
 
-_state_size_with_prefix = rnn_cell._state_size_with_prefix
+_state_size_with_prefix = rnn_cell_impl._state_size_with_prefix
 
 def _dynamic_rnn_loop(cell, inputs, initial_state, parallel_iterations, swap_memory, sequence_length=None, dtype=None):
   """Internal implementation of Dynamic RNN.
@@ -84,7 +84,7 @@ def _dynamic_rnn_loop(cell, inputs, initial_state, parallel_iterations, swap_mem
   # Prepare dynamic conditional copying of state & output
   def _create_zero_arrays(size):
     size = _state_size_with_prefix(size, prefix=[batch_size])
-    return array_ops.zeros(array_ops.pack(size), rnn._infer_state_dtype(dtype, state))
+    return array_ops.zeros(array_ops.stack(size), rnn._infer_state_dtype(dtype, state))
 
   flat_zero_output = tuple(_create_zero_arrays(output) for output in flat_output_size)
   zero_output = nest.pack_sequence_as(structure=cell.output_size, flat_sequence=flat_zero_output)
@@ -104,7 +104,7 @@ def _dynamic_rnn_loop(cell, inputs, initial_state, parallel_iterations, swap_mem
   output_ta = tuple(_create_ta("output_%d" % i, rnn._infer_state_dtype(dtype, state)) for i in range(len(flat_output_size)))
   input_ta = tuple(_create_ta("input_%d" % i, flat_input[0].dtype) for i in range(len(flat_input)))
 
-  input_ta = tuple(ta.unpack(input_) for ta, input_ in zip(input_ta, flat_input))
+  input_ta = tuple(ta.unstack(input_) for ta, input_ in zip(input_ta, flat_input))
 
   def _time_step(time, output_ta_t, state):
     """Take a time step of the dynamic RNN.
@@ -159,7 +159,7 @@ def _dynamic_rnn_loop(cell, inputs, initial_state, parallel_iterations, swap_mem
       swap_memory=swap_memory)
 
   # Unpack final output if not using output tuples.
-  final_outputs = tuple(ta.pack() for ta in output_final_ta)
+  final_outputs = tuple(ta.stack() for ta in output_final_ta)
 
   # Restore some shape information
   for output, output_size in zip(final_outputs, flat_output_size):
@@ -253,9 +253,9 @@ def bidirectional_dynamic_rnn(cell_fw, cell_bw, inputs, sequence_length=None,
     TypeError: If `cell_fw` or `cell_bw` is not an instance of `RNNCell`.
   """
 
-  if not isinstance(cell_fw, rnn_cell.RNNCell):
+  if not isinstance(cell_fw, tf.contrib.rnn.RNNCell):
     raise TypeError("cell_fw must be an instance of RNNCell")
-  if not isinstance(cell_bw, rnn_cell.RNNCell):
+  if not isinstance(cell_bw, tf.contrib.rnn.RNNCell):
     raise TypeError("cell_bw must be an instance of RNNCell")
 
   with vs.variable_scope(scope or "BiRNN"):
@@ -390,7 +390,7 @@ def dynamic_rnn(cell, inputs, sequence_length=None, initial_state=None,
     ValueError: If inputs is None or an empty list.
   """
 
-  if not isinstance(cell, rnn_cell.RNNCell):
+  if not isinstance(cell, tf.contrib.rnn.RNNCell):
     raise TypeError("cell must be an instance of RNNCell")
 
   # By default, time_major==False and inputs are batch-major: shaped
@@ -434,7 +434,7 @@ def dynamic_rnn(cell, inputs, sequence_length=None, initial_state=None,
 
     def _assert_has_shape(x, shape):
       x_shape = array_ops.shape(x)
-      packed_shape = array_ops.pack(shape)
+      packed_shape = array_ops.stack(shape)
       return control_flow_ops.Assert(
           math_ops.reduce_all(math_ops.equal(x_shape, packed_shape)),
           ["Expected shape for Tensor %s is " % x.name,

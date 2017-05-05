@@ -106,10 +106,10 @@ class SentenceMatchModelGraph(object):
             passage_char_lengths = tf.reshape(self.passage_char_lengths, [-1])
             with tf.variable_scope('char_lstm'):
                 # lstm cell
-                char_lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(char_lstm_dim)
+                char_lstm_cell = tf.contrib.rnn.BasicLSTMCell(char_lstm_dim)
                 # dropout
-                if is_training: char_lstm_cell = tf.nn.rnn_cell.DropoutWrapper(char_lstm_cell, output_keep_prob=(1 - dropout_rate))
-                char_lstm_cell = tf.nn.rnn_cell.MultiRNNCell([char_lstm_cell])
+                if is_training: char_lstm_cell = tf.contrib.rnn.DropoutWrapper(char_lstm_cell, output_keep_prob=(1 - dropout_rate))
+                char_lstm_cell = tf.contrib.rnn.MultiRNNCell([char_lstm_cell])
 
                 # question_representation
                 question_char_outputs = my_rnn.dynamic_rnn(char_lstm_cell, in_question_char_repres, 
@@ -129,15 +129,15 @@ class SentenceMatchModelGraph(object):
 
             input_dim += char_lstm_dim
 
-        in_question_repres = tf.concat(2, in_question_repres) # [batch_size, question_len, dim]
-        in_passage_repres = tf.concat(2, in_passage_repres) # [batch_size, passage_len, dim]
+        in_question_repres = tf.concat(in_question_repres, 2) # [batch_size, question_len, dim]
+        in_passage_repres = tf.concat(in_passage_repres, 2) # [batch_size, passage_len, dim]
 
         if is_training:
             in_question_repres = tf.nn.dropout(in_question_repres, (1 - dropout_rate))
             in_passage_repres = tf.nn.dropout(in_passage_repres, (1 - dropout_rate))
         else:
-            in_question_repres = tf.mul(in_question_repres, (1 - dropout_rate))
-            in_passage_repres = tf.mul(in_passage_repres, (1 - dropout_rate))
+            in_question_repres = tf.multiply(in_question_repres, (1 - dropout_rate))
+            in_passage_repres = tf.multiply(in_passage_repres, (1 - dropout_rate))
         
 
 
@@ -171,7 +171,7 @@ class SentenceMatchModelGraph(object):
         if is_training:
             logits = tf.nn.dropout(logits, (1 - dropout_rate))
         else:
-            logits = tf.mul(logits, (1 - dropout_rate))
+            logits = tf.multiply(logits, (1 - dropout_rate))
         logits = tf.matmul(logits, w_1) + b_1
 
         self.prob = tf.nn.softmax(logits)
@@ -181,7 +181,7 @@ class SentenceMatchModelGraph(object):
 
         gold_matrix = tf.one_hot(self.truth, num_classes, dtype=tf.float32)
 #         gold_matrix = tf.one_hot(self.truth, num_classes)
-        self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, gold_matrix))
+        self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=gold_matrix))
 
         correct = tf.nn.in_top_k(logits, self.truth, 1)
         self.eval_correct = tf.reduce_sum(tf.cast(correct, tf.int32))
