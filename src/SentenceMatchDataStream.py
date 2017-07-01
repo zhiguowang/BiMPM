@@ -59,7 +59,7 @@ class SentenceMatchDataStream(object):
                 char_matrix_idx_1 = char_matrix_idx_1[:max_sent_length]
             if len(word_idx_2)>max_sent_length:
                 word_idx_2 = word_idx_2[:max_sent_length]
-                char_matrix_idx_1 = char_matrix_idx_1[:max_sent_length]
+                char_matrix_idx_2 = char_matrix_idx_2[:max_sent_length]
 
             POS_idx_1 = None
             POS_idx_2 = None
