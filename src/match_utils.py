@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.python.ops import rnn
-import my_rnn
 
 eps = 1e-6
 def cosine_distance(y1,y2):
@@ -176,7 +175,7 @@ def highway_layer(in_val, output_size, scope=None):
 def multi_highway_layer(in_val, output_size, num_layers, scope=None):
     scope_name = 'highway_layer'
     if scope is not None: scope_name = scope
-    for i in xrange(num_layers):
+    for i in iter(range(num_layers)):
         cur_scope_name = scope_name + "-{}".format(i)
         in_val = highway_layer(in_val, output_size, scope=cur_scope_name)
     return in_val
@@ -184,7 +183,7 @@ def multi_highway_layer(in_val, output_size, num_layers, scope=None):
 def cal_max_question_representation(question_representation, cosine_matrix):
     # question_representation: [batch_size, question_len, dim]
     # cosine_matrix: [batch_size, passage_len, question_len]
-    question_index = tf.arg_max(cosine_matrix, 2) # [batch_size, passage_len]
+    question_index = tf.argmax(cosine_matrix, 2) # [batch_size, passage_len]
     def singel_instance(x):
         q = x[0]
         c = x[1]
@@ -346,7 +345,7 @@ def unidirectional_matching(in_question_repres, in_passage_repres,question_lengt
         else: question_aware_dim += 2* lex_decompsition_dim
         
     with tf.variable_scope('context_MP_matching'):
-        for i in xrange(context_layer_num):
+        for i in iter(range(context_layer_num)):
             with tf.variable_scope('layer-{}'.format(i)):
                 with tf.variable_scope('context_represent'):
                     # parameters
@@ -359,14 +358,14 @@ def unidirectional_matching(in_question_repres, in_passage_repres,question_lengt
                     context_lstm_cell_bw = tf.contrib.rnn.MultiRNNCell([context_lstm_cell_bw])
 
                     # question representation
-                    (question_context_representation_fw, question_context_representation_bw), _ = my_rnn.bidirectional_dynamic_rnn(
+                    (question_context_representation_fw, question_context_representation_bw), _ = rnn.bidirectional_dynamic_rnn(
                                         context_lstm_cell_fw, context_lstm_cell_bw, in_question_repres, dtype=tf.float32, 
                                         sequence_length=question_lengths) # [batch_size, question_len, context_lstm_dim]
                     in_question_repres = tf.concat([question_context_representation_fw, question_context_representation_bw], 2)
 
                     # passage representation
                     tf.get_variable_scope().reuse_variables()
-                    (passage_context_representation_fw, passage_context_representation_bw), _ = my_rnn.bidirectional_dynamic_rnn(
+                    (passage_context_representation_fw, passage_context_representation_bw), _ = rnn.bidirectional_dynamic_rnn(
                                         context_lstm_cell_fw, context_lstm_cell_bw, in_passage_repres, dtype=tf.float32, 
                                         sequence_length=passage_lengths) # [batch_size, passage_len, context_lstm_dim]
                     in_passage_repres = tf.concat([passage_context_representation_fw, passage_context_representation_bw], 2)
@@ -399,7 +398,7 @@ def unidirectional_matching(in_question_repres, in_passage_repres,question_lengt
     aggregation_dim = 0
     aggregation_input = all_question_aware_representatins
     with tf.variable_scope('aggregation_layer'):
-        for i in xrange(aggregation_layer_num):
+        for i in iter(range(aggregation_layer_num)):
             with tf.variable_scope('layer-{}'.format(i)):
                 aggregation_lstm_cell_fw = tf.contrib.rnn.BasicLSTMCell(aggregation_lstm_dim)
                 aggregation_lstm_cell_bw = tf.contrib.rnn.BasicLSTMCell(aggregation_lstm_dim)
@@ -409,7 +408,7 @@ def unidirectional_matching(in_question_repres, in_passage_repres,question_lengt
                 aggregation_lstm_cell_fw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_fw])
                 aggregation_lstm_cell_bw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_bw])
 
-                cur_aggregation_representation, _ = my_rnn.bidirectional_dynamic_rnn(
+                cur_aggregation_representation, _ = rnn.bidirectional_dynamic_rnn(
                         aggregation_lstm_cell_fw, aggregation_lstm_cell_bw, aggregation_input, 
                         dtype=tf.float32, sequence_length=passage_lengths)
 
@@ -522,7 +521,7 @@ def bilateral_match_func2(in_question_repres, in_passage_repres,
             passage_aware_dim += MP_dim
 
     with tf.variable_scope('context_MP_matching'):
-        for i in xrange(context_layer_num): # support multiple context layer
+        for i in iter(range(context_layer_num)): # support multiple context layer
             with tf.variable_scope('layer-{}'.format(i)):
                 with tf.variable_scope('context_represent'):
                     # parameters
@@ -535,14 +534,14 @@ def bilateral_match_func2(in_question_repres, in_passage_repres,
                     context_lstm_cell_bw = tf.contrib.rnn.MultiRNNCell([context_lstm_cell_bw])
 
                     # question representation
-                    (question_context_representation_fw, question_context_representation_bw), _ = my_rnn.bidirectional_dynamic_rnn(
+                    (question_context_representation_fw, question_context_representation_bw), _ = rnn.bidirectional_dynamic_rnn(
                                         context_lstm_cell_fw, context_lstm_cell_bw, in_question_repres, dtype=tf.float32, 
                                         sequence_length=question_lengths) # [batch_size, question_len, context_lstm_dim]
                     in_question_repres = tf.concat([question_context_representation_fw, question_context_representation_bw], 2)
 
                     # passage representation
                     tf.get_variable_scope().reuse_variables()
-                    (passage_context_representation_fw, passage_context_representation_bw), _ = my_rnn.bidirectional_dynamic_rnn(
+                    (passage_context_representation_fw, passage_context_representation_bw), _ = rnn.bidirectional_dynamic_rnn(
                                         context_lstm_cell_fw, context_lstm_cell_bw, in_passage_repres, dtype=tf.float32, 
                                         sequence_length=passage_lengths) # [batch_size, passage_len, context_lstm_dim]
                     in_passage_repres = tf.concat([passage_context_representation_fw, passage_context_representation_bw], 2)
@@ -602,7 +601,7 @@ def bilateral_match_func2(in_question_repres, in_passage_repres,
     qa_aggregation_input = question_aware_representatins
     pa_aggregation_input = passage_aware_representatins
     with tf.variable_scope('aggregation_layer'):
-        for i in xrange(aggregation_layer_num): # support multiple aggregation layer
+        for i in iter(range(aggregation_layer_num)): # support multiple aggregation layer
             with tf.variable_scope('left_layer-{}'.format(i)):
                 aggregation_lstm_cell_fw = tf.contrib.rnn.BasicLSTMCell(aggregation_lstm_dim)
                 aggregation_lstm_cell_bw = tf.contrib.rnn.BasicLSTMCell(aggregation_lstm_dim)
@@ -612,7 +611,7 @@ def bilateral_match_func2(in_question_repres, in_passage_repres,
                 aggregation_lstm_cell_fw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_fw])
                 aggregation_lstm_cell_bw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_bw])
 
-                cur_aggregation_representation, _ = my_rnn.bidirectional_dynamic_rnn(
+                cur_aggregation_representation, _ = rnn.bidirectional_dynamic_rnn(
                         aggregation_lstm_cell_fw, aggregation_lstm_cell_bw, qa_aggregation_input, 
                         dtype=tf.float32, sequence_length=passage_lengths)
 
@@ -632,7 +631,7 @@ def bilateral_match_func2(in_question_repres, in_passage_repres,
                 aggregation_lstm_cell_fw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_fw])
                 aggregation_lstm_cell_bw = tf.contrib.rnn.MultiRNNCell([aggregation_lstm_cell_bw])
 
-                cur_aggregation_representation, _ = my_rnn.bidirectional_dynamic_rnn(
+                cur_aggregation_representation, _ = rnn.bidirectional_dynamic_rnn(
                         aggregation_lstm_cell_fw, aggregation_lstm_cell_bw, pa_aggregation_input, 
                         dtype=tf.float32, sequence_length=question_lengths)
 

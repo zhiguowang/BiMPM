@@ -9,7 +9,7 @@ def pad_2d_matrix(in_val, max_length=None, dtype=np.int32):
     if max_length is None: max_length = np.max([len(cur_in_val) for cur_in_val in in_val])
     batch_size = len(in_val)
     out_val = np.zeros((batch_size, max_length), dtype=dtype)
-    for i in xrange(batch_size):
+    for i in iter(range(batch_size)):
         cur_in_val = in_val[i]
         kept_length = len(cur_in_val)
         if kept_length>max_length: kept_length = max_length
@@ -21,10 +21,10 @@ def pad_3d_tensor(in_val, max_length1=None, max_length2=None, dtype=np.int32):
     if max_length2 is None: max_length2 = np.max([np.max([len(val) for val in cur_in_val]) for cur_in_val in in_val])
     batch_size = len(in_val)
     out_val = np.zeros((batch_size, max_length1, max_length2), dtype=dtype)
-    for i in xrange(batch_size):
+    for i in iter(range(batch_size)):
         cur_length1 = max_length1
         if len(in_val[i])<max_length1: cur_length1 = len(in_val[i])
-        for j in xrange(cur_length1):
+        for j in iter(range(cur_length1)):
             cur_in_val = in_val[i][j]
             kept_length = len(cur_in_val)
             if kept_length>max_length2: kept_length = max_length2
@@ -37,9 +37,9 @@ class SentenceMatchDataStream(object):
     def __init__(self, inpath, word_vocab=None, char_vocab=None, POS_vocab=None, NER_vocab=None, label_vocab=None, batch_size=60, 
                  isShuffle=False, isLoop=False, isSort=True, max_char_per_word=10, max_sent_length=200):
         instances = []
-        infile = open(inpath, 'rt')
+        infile = open(inpath, 'rt', encoding='utf-8')
         for line in infile:
-            line = line.decode('utf-8').strip()
+            line = line.strip()
             if line.startswith('-'): continue
             items = re.split("\t", line)
             label = items[0]
@@ -113,7 +113,7 @@ class SentenceMatchDataStream(object):
             NER_idx_2_batch = None
             if NER_vocab is not None: NER_idx_2_batch = []
 
-            for i in xrange(batch_start, batch_end):
+            for i in iter(range(batch_start, batch_end)):
                 (label, sentence1, sentence2, label_id, word_idx_1, word_idx_2, char_matrix_idx_1, char_matrix_idx_2,
                  POS_idx_1, POS_idx_2, NER_idx_1, NER_idx_2) = instances[i]
                 label_batch.append(label)

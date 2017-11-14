@@ -21,9 +21,9 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
     all_NERs = None
     if with_POS: all_POSs = set()
     if with_NER: all_NERs = set()
-    infile = open(train_path, 'rt')
+    infile = open(train_path, 'rt', encoding='utf-8')
     for line in infile:
-        line = line.decode('utf-8').strip()
+        line = line.strip()
         if line.startswith('-'): continue
         items = re.split("\t", line)
         label = items[0]
@@ -51,7 +51,7 @@ def evaluate(dataStream, valid_graph, sess, outpath=None, label_vocab=None, mode
     total_tags = 0.0
     correct_tags = 0.0
     dataStream.reset()
-    for batch_index in xrange(dataStream.get_num_batch()):
+    for batch_index in iter(range(dataStream.get_num_batch())):
         cur_dev_batch = dataStream.get_batch(batch_index)
         (label_batch, sent1_batch, sent2_batch, label_id_batch, word_idx_1_batch, word_idx_2_batch, 
                                  char_matrix_idx_1_batch, char_matrix_idx_2_batch, sent1_length_batch, sent2_length_batch, 
@@ -89,12 +89,12 @@ def evaluate(dataStream, valid_graph, sess, outpath=None, label_vocab=None, mode
         if outpath is not None:
             if mode =='prediction':
                 predictions = sess.run(valid_graph.get_predictions(), feed_dict=feed_dict)
-                for i in xrange(len(label_batch)):
+                for i in iter(range(len(label_batch))):
                     outline = label_batch[i] + "\t" + label_vocab.getWord(predictions[i]) + "\t" + sent1_batch[i] + "\t" + sent2_batch[i] + "\n"
                     outfile.write(outline.encode('utf-8'))
             else:
                 probs = sess.run(valid_graph.get_prob(), feed_dict=feed_dict)
-                for i in xrange(len(label_batch)):
+                for i in iter(range(len(label_batch))):
                     outfile.write(label_batch[i] + "\t" + output_probs(probs[i], label_vocab) + "\n")
 
     if outpath is not None: outfile.close()
@@ -104,7 +104,7 @@ def evaluate(dataStream, valid_graph, sess, outpath=None, label_vocab=None, mode
 
 def output_probs(probs, label_vocab):
     out_string = ""
-    for i in xrange(probs.size):
+    for i in iter(range(probs.size)):
         out_string += " {}:{}".format(label_vocab.getWord(i), probs[i])
     return out_string.strip()
 
@@ -232,7 +232,7 @@ def main(_):
                 
         initializer = tf.global_variables_initializer()
         vars_ = {}
-        for var in tf.all_variables():
+        for var in tf.global_variables():
             if "word_embedding" in var.name: continue
 #             if not var.name.startswith("Model"): continue
             vars_[var.name.split(":")[0]] = var
@@ -250,7 +250,7 @@ def main(_):
         max_steps = train_size * FLAGS.max_epochs
         total_loss = 0.0
         start_time = time.time()
-        for step in xrange(max_steps):
+        for step in iter(range(max_steps)):
             # read data
             cur_batch = trainDataStream.nextBatch()
             (label_batch, sent1_batch, sent2_batch, label_id_batch, word_idx_1_batch, word_idx_2_batch, 
@@ -303,6 +303,7 @@ def main(_):
                 accuracy = evaluate(devDataStream, valid_graph, sess,char_vocab=char_vocab, POS_vocab=POS_vocab, NER_vocab=NER_vocab)
                 print("Current accuracy is %.2f" % accuracy)
                 if accuracy>best_accuracy:
+                    print('Saving model since it\'s the best so far')
                     best_accuracy = accuracy
                     saver.save(sess, best_path)
 
@@ -327,7 +328,7 @@ def main(_):
                  with_full_match=(not FLAGS.wo_full_match), with_maxpool_match=(not FLAGS.wo_maxpool_match), 
                  with_attentive_match=(not FLAGS.wo_attentive_match), with_max_attentive_match=(not FLAGS.wo_max_attentive_match))
         vars_ = {}
-        for var in tf.all_variables():
+        for var in tf.global_variables():
             if "word_embedding" in var.name: continue
             if not var.name.startswith("Model"): continue
             vars_[var.name.split(":")[0]] = var
