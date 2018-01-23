@@ -125,9 +125,13 @@ class Vocab(object):
 #         self.vocab_size, self.word_dim = map(int, header.split())
         word_vecs = {}
         for line in vec_file:
-            line = line.decode('utf-8').strip()
-            parts = line.split(' ')
-            word = parts[0]
+            line = line.decode('utf-8')
+            if line[0] == line[1] == ' ':
+                word = ' '
+                parts = [' '] + line.strip().split(' ')
+            else:
+                parts = line.split(' ')
+                word = parts[0]
             self.word_dim = len(parts[1:])
             if (voc is not None) and (word not in voc): continue
             vector = np.array(parts[1:], dtype='float32')
