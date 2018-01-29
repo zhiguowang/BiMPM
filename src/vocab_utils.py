@@ -302,10 +302,7 @@ class Vocab(object):
             seq.append(idx)
         return seq
 
-
-
-    def to_character_matrix(self, sentence):
-#         sentence = sentence.strip().lower()
+    def to_character_matrix(self, sentence, max_char_per_word=-1):
         sentence = sentence.strip()
         seq = []
         for word in re.split('\\s+', sentence):
@@ -318,6 +315,8 @@ class Vocab(object):
                     idx = self.getIndex(simWord)
                 if idx == None: idx = self.vocab_size
                 cur_seq.append(idx)
+            if max_char_per_word != -1 and len(cur_seq) > max_char_per_word:
+                cur_seq = cur_seq[:max_char_per_word]
             seq.append(cur_seq)
         return seq
 
