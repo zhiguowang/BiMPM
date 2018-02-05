@@ -1,7 +1,7 @@
 # BiMPM: Bilateral Multi-Perspective Matching for Natural Language Sentences
 
 ## Updates (Jan 28, 2018)
-* This repository has been updated to tensorflow 1.4
+* This repository has been updated to tensorflow 1.5
 * The training process speeds up 15+ times without lossing the accuracy.
 * All codes have been re-constructed for better readability and adaptability.
 
@@ -12,7 +12,7 @@ You can use this program to deal with tasks like [paraphrase identification](htt
 
 ## Requirements
 * python 2.7
-* tensorflow 1.4
+* tensorflow 1.5
 
 ## Data format
 Both the train and test sets require a tab-separated format.
