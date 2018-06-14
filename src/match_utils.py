@@ -1,5 +1,5 @@
+from . import layer_utils
 import tensorflow as tf
-import layer_utils
 
 eps = 1e-6
 def cosine_distance(y1,y2):
@@ -88,7 +88,7 @@ def highway_layer(in_val, output_size, scope=None):
 def multi_highway_layer(in_val, output_size, num_layers, scope=None):
     scope_name = 'highway_layer'
     if scope is not None: scope_name = scope
-    for i in xrange(num_layers):
+    for i in range(num_layers):
         cur_scope_name = scope_name + "-{}".format(i)
         in_val = highway_layer(in_val, output_size, scope=cur_scope_name)
     return in_val
@@ -223,7 +223,7 @@ def bilateral_match_func(in_question_repres, in_passage_repres,
     passage_aware_dim += match_dim
 
     with tf.variable_scope('context_MP_matching'):
-        for i in xrange(options.context_layer_num): # support multiple context layer
+        for i in range(options.context_layer_num): # support multiple context layer
             with tf.variable_scope('layer-{}'.format(i)):
                 # contextual lstm for both passage and question
                 in_question_repres = tf.multiply(in_question_repres, tf.expand_dims(question_mask, axis=-1))
@@ -301,7 +301,7 @@ def bilateral_match_func(in_question_repres, in_passage_repres,
     qa_aggregation_input = question_aware_representatins
     pa_aggregation_input = passage_aware_representatins
     with tf.variable_scope('aggregation_layer'):
-        for i in xrange(options.aggregation_layer_num): # support multiple aggregation layer
+        for i in range(options.aggregation_layer_num): # support multiple aggregation layer
             qa_aggregation_input = tf.multiply(qa_aggregation_input, tf.expand_dims(passage_mask, axis=-1))
             (fw_rep, bw_rep, cur_aggregation_representation) = layer_utils.my_lstm_layer(
                         qa_aggregation_input, options.aggregation_lstm_dim, input_lengths=passage_lengths, scope_name='left_layer-{}'.format(i),

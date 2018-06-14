@@ -2,13 +2,13 @@
 from __future__ import print_function
 import argparse
 import sys
-from vocab_utils import Vocab
-import namespace_utils
+from .vocab_utils import Vocab
+from . import namespace_utils
 
 import tensorflow as tf
-import SentenceMatchTrainer
-from SentenceMatchModelGraph import SentenceMatchModelGraph
-from SentenceMatchDataStream import SentenceMatchDataStream
+from . import SentenceMatchTrainer
+from .SentenceMatchModelGraph import SentenceMatchModelGraph
+from .SentenceMatchDataStream import SentenceMatchDataStream
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import tensorflow as tf
-import layer_utils
-import match_utils
+from . import layer_utils
+from . import match_utils
 
 
 class SentenceMatchModelGraph(object):
