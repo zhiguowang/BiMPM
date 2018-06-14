@@ -43,7 +43,12 @@ def read_all_instances(inpath, word_vocab=None, label_vocab=None, char_vocab=Non
         idx += 1
         line = line.decode('utf-8').strip()
         if line.startswith('-'): continue
-        cur_ID, sentence1, sentence2, label = line.split('\t')
+        items = line.split('\t')
+        # 统一处理输入数据
+        if len(items) > 3:
+            cur_ID, sentence1, sentence2, label = items[0], items[1], items[2], items[3]
+        else:
+            cur_ID, sentence1, sentence2, label = items[0], items[1], items[2], "1"
         # 中文分词处理
         sentence1 = sentence1.strip()
         sentence2 = sentence2.strip()

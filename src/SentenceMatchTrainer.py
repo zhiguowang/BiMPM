@@ -132,6 +132,38 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
             json.dump(result_json, outfile)
     return accuracy
 
+
+# 预测评估函数
+def predict(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
+    """
+    预测结果生成格式 ： "行号\t预测结果"
+    :param sess:
+    :param valid_graph:
+    :param devDataStream:
+    :param outpath:
+    :param label_vocab:
+    :return:
+    """
+    if not outpath:
+        print('输出文件不存在！')
+        return "预测失败！"
+    result_file = open(outpath, 'w')
+    total = 0
+    for batch_index in range(devDataStream.get_num_batch()):  # for each batch
+        cur_batch = devDataStream.get_batch(batch_index)
+        total += cur_batch.batch_size
+        feed_dict = valid_graph.create_feed_dict(cur_batch, is_training=True)
+        [_, _, predictions] = sess.run([valid_graph.eval_correct, valid_graph.prob, valid_graph.predictions], feed_dict=feed_dict)
+
+        for i in range(cur_batch.batch_size):
+            (label, sentence1, sentence2, _, _, _, _, _, cur_ID) = cur_batch.instances[i]
+            result_file.write(cur_ID + '\t' + label_vocab.getWord(predictions[i]) + '\n')
+
+    result_file.close()
+    print("预测数量： {}".format(total))
+    return "预测完成！"
+
+
 def train(sess, saver, train_graph, valid_graph, trainDataStream,
           devDataStream, options, best_path):
     best_accuracy = -1
