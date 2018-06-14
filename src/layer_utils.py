@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 from tensorflow.python.ops import nn_ops
 
