@@ -3,6 +3,8 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import time
 import re
 import tensorflow as tf
@@ -13,6 +15,9 @@ from vocab_utils import Vocab
 from SentenceMatchDataStream import SentenceMatchDataStream
 from SentenceMatchModelGraph import SentenceMatchModelGraph
 import namespace_utils
+import jieba
+
+jieba.load_userdict('mydict/mydict.txt')
 
 # 获取logger实例，如果参数为空则返回root logger
 logger = logging.getLogger("BiMPM")
@@ -45,7 +50,7 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
     infile = open(train_path, 'rt')
     i = 0
     for line in infile:
-        line = line.decode('utf-8').strip()
+        #line = line.decode('utf-8').strip()
         if line.startswith('-'): continue
         lineno, sentence1, sentence2, label = line.strip().split('\t')
         # items = re.split("\t", line)
@@ -53,6 +58,16 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
         # sentence1 = re.split("\\s+",items[1].lower())
         # sentence2 = re.split("\\s+",items[2].lower())
         all_labels.add(label)
+        # 中文分词， 如果不分词，all_words跟all_chars一样。
+        sentence1 = sentence1.strip()
+        sentence2 = sentence2.strip()
+        stopwords = '，。！？*'
+        words1 = [w for w in jieba.cut(sentence1) if w.strip() and w not in stopwords]
+        words2 = [w for w in jieba.cut(sentence2) if w.strip() and w not in stopwords]
+        #sentence1 = ' '.join(words1)
+        #sentence2 = ' '.join(words2)
+        sentence1 = words1
+        sentence2 = words2
         i += 1
         if i < 3:
             print(sentence1)

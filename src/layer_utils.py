@@ -20,7 +20,7 @@ def my_lstm_layer(input_reps, lstm_dim, input_lengths=None,
         if use_cudnn:
             inputs = tf.transpose(input_reps, [1, 0, 2])
             lstm = tf.contrib.cudnn_rnn.CudnnLSTM(1, lstm_dim, direction="bidirectional",
-                                    name="{}_cudnn_bi_lstm".format(scope_name), dropout=dropout_rate if is_training else 0)
+                                    dropout=dropout_rate if is_training else 0)
             outputs, _ = lstm(inputs)
             outputs = tf.transpose(outputs, [1, 0, 2])
             f_rep = outputs[:, :, 0:lstm_dim]

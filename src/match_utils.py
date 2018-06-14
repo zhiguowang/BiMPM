@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from . import layer_utils
+import layer_utils
 import tensorflow as tf
 
 eps = 1e-6
