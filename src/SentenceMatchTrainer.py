@@ -43,6 +43,7 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
     if with_POS: all_POSs = set()
     if with_NER: all_NERs = set()
     infile = open(train_path, 'rt')
+    i = 0
     for line in infile:
         line = line.decode('utf-8').strip()
         if line.startswith('-'): continue
@@ -52,7 +53,14 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
         # sentence1 = re.split("\\s+",items[1].lower())
         # sentence2 = re.split("\\s+",items[2].lower())
         all_labels.add(label)
+        i += 1
+        if i < 3:
+            print(sentence1)
+            print(type(sentence1))
+            print(all_words)
         all_words.update(sentence1)
+        if i < 3:
+            print(all_words)
         all_words.update(sentence2)
         # if with_POS:
         #     all_POSs.update(re.split("\\s+",items[3]))
@@ -64,11 +72,11 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
 
     all_chars = set()
     for word in all_words:
-        print(word)
-        print(type(word))
+        #print(word)
+        #print(type(word))
         for char in word:
-            print(char)
-            print(type(char))
+            #print(char)
+            #print(type(char))
             all_chars.add(char)
     # print(all_chars)
     # print('-------------------------------------------------')
