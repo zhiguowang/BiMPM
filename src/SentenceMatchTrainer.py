@@ -7,11 +7,33 @@ import time
 import re
 import tensorflow as tf
 import json
+import logging
 
 from .vocab_utils import Vocab
 from .SentenceMatchDataStream import SentenceMatchDataStream
 from .SentenceMatchModelGraph import SentenceMatchModelGraph
 from . import namespace_utils
+
+# 获取logger实例，如果参数为空则返回root logger
+logger = logging.getLogger("BiMPM")
+# 指定logger输出格式
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
+
+# 文件日志
+file_handler = logging.FileHandler("train.log")
+file_handler.setFormatter(formatter)  # 可以通过setFormatter指定输出格式
+
+# 控制台日志
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.formatter = formatter  # 也可以直接给formatter赋值
+
+# 为logger添加的日志处理器
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# 指定日志的最低输出级别，默认为WARN级别
+logger.setLevel(logging.INFO)
+
 
 def collect_vocabs(train_path, with_POS=False, with_NER=False):
     all_labels = set()
@@ -83,8 +105,10 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
 def train(sess, saver, train_graph, valid_graph, trainDataStream,
           devDataStream, options, best_path):
     best_accuracy = -1
+
     for epoch in range(options.max_epochs):
         print('Train in epoch %d' % epoch)
+        logger.info('Train in epoch {}'.format(epoch))
         # training
         trainDataStream.shuffle()
         num_batch = trainDataStream.get_num_batch()
@@ -102,12 +126,15 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
         print()
         duration = time.time() - start_time
         print('Epoch %d: loss = %.4f (%.3f sec)' % (epoch, total_loss / num_batch, duration))
+        logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, total_loss / num_batch, duration))
         # evaluation
         start_time = time.time()
         acc = evaluation(sess, valid_graph, devDataStream)
         duration = time.time() - start_time
         print("Accuracy: %.2f" % acc)
         print('Evaluation time: %.3f sec' % (duration))
+        logger.info("Accuracy: {}".format(acc))
+        logger.info("Evaluation time: {} sec".format(duration))
         if acc>= best_accuracy:
             best_accuracy = acc
             saver.save(sess, best_path)
