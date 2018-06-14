@@ -9,9 +9,9 @@ import tensorflow as tf
 import json
 import logging
 
-from .vocab_utils import Vocab
-from .SentenceMatchDataStream import SentenceMatchDataStream
-from .SentenceMatchModelGraph import SentenceMatchModelGraph
+from vocab_utils import Vocab
+from SentenceMatchDataStream import SentenceMatchDataStream
+import SentenceMatchModelGraph
 from . import namespace_utils
 
 # 获取logger实例，如果参数为空则返回root logger
