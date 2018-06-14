@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
-from . import layer_utils
-from . import match_utils
+import layer_utils
+import match_utils
 
 
 class SentenceMatchModelGraph(object):
