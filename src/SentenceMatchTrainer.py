@@ -64,8 +64,15 @@ def collect_vocabs(train_path, with_POS=False, with_NER=False):
 
     all_chars = set()
     for word in all_words:
+        print(word)
+        print(type(word))
         for char in word:
+            print(char)
+            print(type(char))
             all_chars.add(char)
+    # print(all_chars)
+    # print('-------------------------------------------------')
+    # print(all_words)
     return (all_words, all_chars, all_labels, all_POSs, all_NERs)
 
 def output_probs(probs, label_vocab):
