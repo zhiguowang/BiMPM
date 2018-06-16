@@ -134,7 +134,7 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     "probs": output_probs(probs[i], label_vocab),
                 }
                 assert type(label_vocab.getWord(predictions[i])) == type(label), "the type of predict and label not equal"
-                print(label_vocab.getWord(predictions[i]))
+                # print(label_vocab.getWord(predictions[i]))
                 if label_vocab.getWord(predictions[i]) == "1":
                     if label == "1":
                         TP += 1
@@ -151,7 +151,7 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
     accuracy = (TP + TN) / (TP + FP + TN + FN)
     F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
 
-    accuracy1 = correct / total * 100
+    accuracy1 = correct / total
     assert accuracy == accuracy1, "accuracy != accuracy1"
     if outpath is not None:
         with open(outpath, 'w') as outfile:
