@@ -156,6 +156,16 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
     if outpath is not None:
         with open(outpath, 'w') as outfile:
             json.dump(result_json, outfile)
+    print('************evaluation result****************')
+    print('**********TP: {}'.format(TP))
+    print('**********FP: {}'.format(FP))
+    print('**********TN: {}'.format(TN))
+    print('**********FN: {}'.format(FN))
+    print('**********precision_rate: {}'.format(precision_rate))
+    print('**********recall_rate: {}'.format(recall_rate))
+    print('**********accuracy: {}'.format(accuracy))
+    print('**********F1_score: {}'.format(F1_score))
+    print('************evaluation result****************')
     return accuracy, F1_score
 
 
