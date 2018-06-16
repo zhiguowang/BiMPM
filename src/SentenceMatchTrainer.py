@@ -146,10 +146,15 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     else:
                         FN += 1
     # 准确率（precision rate）、召回率（recall rate）和accuracy、F1-score
-    precision_rate = TP / (TP + FP)
-    recall_rate = TP / (TP + FN)
     accuracy = (TP + TN) / (TP + FP + TN + FN)
-    F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
+    try:
+        precision_rate = TP / (TP + FP)
+        recall_rate = TP / (TP + FN)
+        F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
+    except ZeroDivisionError:
+        precision_rate = 0
+        recall_rate = 0
+        F1_score = -1
 
     accuracy1 = correct / total
     assert accuracy == accuracy1, "accuracy != accuracy1"
