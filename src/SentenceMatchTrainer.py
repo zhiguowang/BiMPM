@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from __future__ import division
 import argparse
 import os
 import sys
@@ -107,6 +108,12 @@ def output_probs(probs, label_vocab):
 def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
     if outpath is not None:
         result_json = {}
+    # 评估标准
+    TP = 0  # True Positive（TP）意思表示做出同义的判定，而且判定是正确的，TP的数值表示正确的同义判定的个数；
+    FP = 0  # False Positive（FP）数值表示错误的同义判定的个数；
+    TN = 0  # True Negative（TN）数值表示正确的不同义判定个数；
+    FN = 0  # False Negative（FN）数值表示错误的不同义判定个数。
+
     total = 0
     correct = 0
     for batch_index in range(devDataStream.get_num_batch()):  # for each batch
@@ -126,11 +133,30 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     "prediction": label_vocab.getWord(predictions[i]),
                     "probs": output_probs(probs[i], label_vocab),
                 }
-    accuracy = correct / float(total) * 100
+                assert type(label_vocab.getWord(predictions[i])) == type(label), "the type of predict and label not equal"
+                print(label_vocab.getWord(predictions[i]))
+                if label_vocab.getWord(predictions[i]) == "1":
+                    if label == "1":
+                        TP += 1
+                    else:
+                        FP += 1
+                else:
+                    if label == "0":
+                        TN += 1
+                    else:
+                        FN += 1
+    # 准确率（precision rate）、召回率（recall rate）和accuracy、F1-score
+    precision_rate = TP / (TP + FP)
+    recall_rate = TP / (TP + FN)
+    accuracy = (TP + TN) / (TP + FP + TN + FN)
+    F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
+
+    accuracy1 = correct / total * 100
+    assert accuracy == accuracy1, "accuracy != accuracy1"
     if outpath is not None:
         with open(outpath, 'w') as outfile:
             json.dump(result_json, outfile)
-    return accuracy
+    return accuracy, F1_score
 
 
 # 预测评估函数
@@ -166,7 +192,7 @@ def predict(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
 
 def train(sess, saver, train_graph, valid_graph, trainDataStream,
           devDataStream, options, best_path):
-    best_accuracy = -1
+    best_f1_score = -1
 
     for epoch in range(options.max_epochs):
         print('Train in epoch %d' % epoch)
@@ -191,14 +217,16 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
         logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, total_loss / num_batch, duration))
         # evaluation
         start_time = time.time()
-        acc = evaluation(sess, valid_graph, devDataStream)
+        acc, F1_score = evaluation(sess, valid_graph, devDataStream)
         duration = time.time() - start_time
         print("Accuracy: %.2f" % acc)
+        print("F1_score: %.2f" % F1_score)
         print('Evaluation time: %.3f sec' % (duration))
         logger.info("Accuracy: {}".format(acc))
+        logger.info("F1_score: {}".format(F1_score))
         logger.info("Evaluation time: {} sec".format(duration))
-        if acc>= best_accuracy:
-            best_accuracy = acc
+        if F1_score >= best_f1_score:
+            best_f1_score = F1_score
             saver.save(sess, best_path)
 
 
