@@ -12,6 +12,11 @@ import tensorflow as tf
 import json
 import logging
 
+import matplotlib
+#matplotlib.use('TKAgg')  # necessary on OS X
+matplotlib.use('Agg')
+from matplotlib import pyplot as pl
+
 from vocab_utils import Vocab
 from SentenceMatchDataStream import SentenceMatchDataStream
 from SentenceMatchModelGraph import SentenceMatchModelGraph
@@ -146,32 +151,32 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     else:
                         FN += 1
     # 准确率（precision rate）、召回率（recall rate）和accuracy、F1-score
-    accuracy = (TP + TN) / (TP + FP + TN + FN)
-    try:
-        precision_rate = TP / (TP + FP)
-        recall_rate = TP / (TP + FN)
-        F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
-    except ZeroDivisionError:
-        precision_rate = 0
-        recall_rate = 0
-        F1_score = -1
-
-    accuracy1 = correct / total
-    assert accuracy == accuracy1, "accuracy != accuracy1"
+    accuracy1 = correct / total * 100
     if outpath is not None:
+        try:
+            accuracy = (TP + TN) / (TP + FP + TN + FN)
+            precision_rate = TP / (TP + FP)
+            recall_rate = TP / (TP + FN)
+            F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
+            assert accuracy == accuracy1, "accuracy != accuracy1"
+            print('************evaluation result****************')
+            print('**********TP: {}'.format(TP))
+            print('**********FP: {}'.format(FP))
+            print('**********TN: {}'.format(TN))
+            print('**********FN: {}'.format(FN))
+            print('**********precision_rate: {}'.format(precision_rate))
+            print('**********recall_rate: {}'.format(recall_rate))
+            print('**********accuracy: {}'.format(accuracy))
+            print('**********F1_score: {}'.format(F1_score))
+            print('************evaluation result****************')
+        except ZeroDivisionError:
+            precision_rate = 0
+            recall_rate = 0
+            F1_score = -1
         with open(outpath, 'w') as outfile:
             json.dump(result_json, outfile)
-    print('************evaluation result****************')
-    print('**********TP: {}'.format(TP))
-    print('**********FP: {}'.format(FP))
-    print('**********TN: {}'.format(TN))
-    print('**********FN: {}'.format(FN))
-    print('**********precision_rate: {}'.format(precision_rate))
-    print('**********recall_rate: {}'.format(recall_rate))
-    print('**********accuracy: {}'.format(accuracy))
-    print('**********F1_score: {}'.format(F1_score))
-    print('************evaluation result****************')
-    return accuracy, F1_score
+
+    return accuracy1
 
 
 # 预测评估函数
@@ -208,6 +213,10 @@ def predict(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
 def train(sess, saver, train_graph, valid_graph, trainDataStream,
           devDataStream, options, best_path):
     best_f1_score = -1
+    # 损失函数
+    train_loss = []
+    # 准确率
+    dev_accuracy = []
 
     for epoch in range(options.max_epochs):
         print('Train in epoch %d' % epoch)
@@ -228,21 +237,41 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
 
         print()
         duration = time.time() - start_time
-        print('Epoch %d: loss = %.4f (%.3f sec)' % (epoch, total_loss / num_batch, duration))
-        logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, total_loss / num_batch, duration))
+        epoch_loss = total_loss / num_batch
+
+        print('Epoch %d: loss = %.4f (%.3f sec)' % (epoch, epoch_loss, duration))
+        logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, epoch_loss, duration))
+        train_loss.append(epoch_loss)
+
         # evaluation
         start_time = time.time()
-        acc, F1_score = evaluation(sess, valid_graph, devDataStream)
+        acc = evaluation(sess, valid_graph, devDataStream)
+        dev_accuracy.append(acc)
         duration = time.time() - start_time
         print("Accuracy: %.2f" % acc)
-        print("F1_score: %.2f" % F1_score)
         print('Evaluation time: %.3f sec' % (duration))
         logger.info("Accuracy: {}".format(acc))
-        logger.info("F1_score: {}".format(F1_score))
         logger.info("Evaluation time: {} sec".format(duration))
-        if F1_score >= best_f1_score:
-            best_f1_score = F1_score
+        if acc >= best_f1_score:
+            best_f1_score = acc
             saver.save(sess, best_path)
+
+    # 画图
+    # 1.Train Loss
+    epoch_seq = range(1, options.max_epochs, 2)
+    pl.plot(epoch_seq, train_loss, 'k--', label='Train Set')
+    pl.title('Train Loss')
+    pl.xlabel('Epochs')
+    pl.ylabel('Loss')
+    # pl.show(block=False)
+    pl.savefig('Loss.png')
+    # 2.Dev Accuracy
+    pl.plot(epoch_seq, dev_accuracy, 'r-', label='Dev Set')
+    pl.title('Train Loss & Dev Accuracy')
+    pl.xlabel('Epochs')
+    pl.ylabel('Accuracy')
+    # pl.show(block=False)
+    pl.savefig('accuracy.png')
 
 
 def main(FLAGS):
