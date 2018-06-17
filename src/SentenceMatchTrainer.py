@@ -165,10 +165,10 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
             print('**********FP: {}'.format(FP))
             print('**********TN: {}'.format(TN))
             print('**********FN: {}'.format(FN))
-            print('**********precision_rate: {}'.format(precision_rate))
-            print('**********recall_rate: {}'.format(recall_rate))
-            print('**********accuracy: {}'.format(accuracy))
-            print('**********F1_score: {}'.format(F1_score))
+            print('**********precision_rate: {:.4f}'.format(precision_rate))
+            print('**********recall_rate: {:.4f}'.format(recall_rate))
+            print('**********accuracy: {:.4f}'.format(accuracy))
+            print('**********F1_score: {:.4f}'.format(F1_score))
             print('************evaluation result****************')
         except ZeroDivisionError:
             precision_rate = 0
@@ -238,24 +238,20 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
         print()
         duration = time.time() - start_time
         epoch_loss = total_loss / num_batch
+        logger.info('Epoch {}: loss = {:.4f} ({:.4f} sec)'.format(epoch, epoch_loss, duration))
 
-        logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, epoch_loss, duration))
         train_loss.append(epoch_loss)
-
         # evaluation
-        start_time = time.time()
         acc, _ = evaluation(sess, valid_graph, devDataStream)
         dev_accuracy.append(acc)
-        duration = time.time() - start_time
-        logger.info("Accuracy: {}".format(acc))
-        logger.info("Evaluation time: {} sec".format(duration))
+        logger.info("Accuracy: {:.4f}".format(acc))
         if acc >= best_f1_score:
             best_f1_score = acc
             saver.save(sess, best_path)
 
     # 画图
     # 1.Train Loss
-    epoch_seq = range(1, options.max_epochs, 1)
+    epoch_seq = range(0, options.max_epochs, 1)
     pl.plot(epoch_seq, train_loss, 'k--', label='Train Set')
     pl.title('Train Loss')
     pl.xlabel('Epochs')
