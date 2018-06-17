@@ -119,6 +119,7 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
     TN = 0  # True Negative（TN）数值表示正确的不同义判定个数；
     FN = 0  # False Negative（FN）数值表示错误的不同义判定个数。
 
+    F1_score = -1
     total = 0
     correct = 0
     for batch_index in range(devDataStream.get_num_batch()):  # for each batch
@@ -176,7 +177,7 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
         with open(outpath, 'w') as outfile:
             json.dump(result_json, outfile)
 
-    return accuracy1
+    return accuracy1, F1_score
 
 
 # 预测评估函数
@@ -219,7 +220,6 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
     dev_accuracy = []
 
     for epoch in range(options.max_epochs):
-        print('Train in epoch %d' % epoch)
         logger.info('Train in epoch {}'.format(epoch))
         # training
         trainDataStream.shuffle()
@@ -239,17 +239,14 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
         duration = time.time() - start_time
         epoch_loss = total_loss / num_batch
 
-        print('Epoch %d: loss = %.4f (%.3f sec)' % (epoch, epoch_loss, duration))
         logger.info('Epoch {}: loss = {} ({} sec)'.format(epoch, epoch_loss, duration))
         train_loss.append(epoch_loss)
 
         # evaluation
         start_time = time.time()
-        acc = evaluation(sess, valid_graph, devDataStream)
+        acc, _ = evaluation(sess, valid_graph, devDataStream)
         dev_accuracy.append(acc)
         duration = time.time() - start_time
-        print("Accuracy: %.2f" % acc)
-        print('Evaluation time: %.3f sec' % (duration))
         logger.info("Accuracy: {}".format(acc))
         logger.info("Evaluation time: {} sec".format(duration))
         if acc >= best_f1_score:
@@ -258,7 +255,7 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
 
     # 画图
     # 1.Train Loss
-    epoch_seq = range(1, options.max_epochs, 2)
+    epoch_seq = range(1, options.max_epochs, 1)
     pl.plot(epoch_seq, train_loss, 'k--', label='Train Set')
     pl.title('Train Loss')
     pl.xlabel('Epochs')
