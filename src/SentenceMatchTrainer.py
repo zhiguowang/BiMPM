@@ -110,6 +110,7 @@ def output_probs(probs, label_vocab):
         out_string += " {}:{}".format(label_vocab.getWord(i), probs[i])
     return out_string.strip()
 
+
 def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
     if outpath is not None:
         result_json = {}
@@ -139,8 +140,7 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     "prediction": label_vocab.getWord(predictions[i]),
                     "probs": output_probs(probs[i], label_vocab),
                 }
-                #assert type(label_vocab.getWord(predictions[i])) == type(label), "the type of predict and label not equal"
-                # print(label_vocab.getWord(predictions[i]))
+
                 if label_vocab.getWord(predictions[i]) == "1":
                     if label == "1":
                         TP += 1
@@ -152,14 +152,14 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
                     else:
                         FN += 1
     # 准确率（precision rate）、召回率（recall rate）和accuracy、F1-score
-    accuracy1 = correct / total * 100
+    acc = correct / total * 100
     if outpath is not None:
         try:
             accuracy = (TP + TN) / (TP + FP + TN + FN)
             precision_rate = TP / (TP + FP)
             recall_rate = TP / (TP + FN)
             F1_score = 2 * precision_rate * recall_rate / (precision_rate + recall_rate)
-            #assert accuracy == accuracy1, "accuracy != accuracy1"
+
             print('************evaluation result****************')
             print('**********TP: {}'.format(TP))
             print('**********FP: {}'.format(FP))
@@ -171,13 +171,12 @@ def evaluation(sess, valid_graph, devDataStream, outpath=None, label_vocab=None)
             print('**********F1_score: {:.4f}'.format(F1_score))
             print('************evaluation result****************')
         except ZeroDivisionError:
-            precision_rate = 0
-            recall_rate = 0
+            logger.error('ZeroDivisionError occur!')
             F1_score = -1
         with open(outpath, 'w') as outfile:
             json.dump(result_json, outfile)
 
-    return accuracy1, F1_score
+    return acc, F1_score
 
 
 # 预测评估函数
@@ -213,7 +212,7 @@ def predict(sess, valid_graph, devDataStream, outpath=None, label_vocab=None):
 
 def train(sess, saver, train_graph, valid_graph, trainDataStream,
           devDataStream, options, best_path):
-    best_f1_score = -1
+    best_acc = -1
     # 损失函数
     train_loss = []
     # 准确率
@@ -239,20 +238,19 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
         duration = time.time() - start_time
         epoch_loss = total_loss / num_batch
         logger.info('Epoch {}: loss = {:.4f} ({:.4f} sec)'.format(epoch, epoch_loss, duration))
-
         train_loss.append(epoch_loss)
         # evaluation
         acc, _ = evaluation(sess, valid_graph, devDataStream)
         dev_accuracy.append(acc)
         logger.info("Accuracy: {:.4f}".format(acc))
-        if acc >= best_f1_score:
-            best_f1_score = acc
+        if acc >= best_acc:
+            best_acc = acc
             saver.save(sess, best_path)
 
     # 画图
     # 1.Train Loss
     epoch_seq = range(0, options.max_epochs, 1)
-    pl.plot(epoch_seq, train_loss, 'k--', label='Train Set')
+    pl.plot(epoch_seq, train_loss, 'k-', label='Train Set')
     pl.title('Train Loss')
     pl.xlabel('Epochs')
     pl.ylabel('Loss')
@@ -260,7 +258,7 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream,
     pl.savefig('Loss.png')
     # 2.Dev Accuracy
     pl.plot(epoch_seq, dev_accuracy, 'r-', label='Dev Set')
-    pl.title('Train Loss & Dev Accuracy')
+    pl.title('Train Loss')
     pl.xlabel('Epochs')
     pl.ylabel('Accuracy')
     # pl.show(block=False)
@@ -289,37 +287,37 @@ def main(FLAGS):
     char_vocab = None
     if os.path.exists(best_path + ".index"):
         has_pre_trained_model = True
-        print('Loading vocabs from a pre-trained model ...')
+        logger.info('Loading vocabs from a pre-trained model ...')
         label_vocab = Vocab(label_path, fileformat='txt2')
         if FLAGS.with_char: char_vocab = Vocab(char_path, fileformat='txt2')
     else:
-        print('Collecting words, chars and labels ...')
+        logger.info('Collecting words, chars and labels ...')
         (all_words, all_chars, all_labels, all_POSs, all_NERs) = collect_vocabs(train_path)
-        print('Number of words: {}'.format(len(all_words)))
+        logger.info('Number of words: {}'.format(len(all_words)))
         label_vocab = Vocab(fileformat='voc', voc=all_labels,dim=2)
         label_vocab.dump_to_txt2(label_path)
 
         if FLAGS.with_char:
-            print('Number of chars: {}'.format(len(all_chars)))
-            char_vocab = Vocab(fileformat='voc', voc=all_chars,dim=FLAGS.char_emb_dim)
+            logger.info('Number of chars: {}'.format(len(all_chars)))
+            char_vocab = Vocab(fileformat='voc', voc=all_chars, dim=FLAGS.char_emb_dim)
             char_vocab.dump_to_txt2(char_path)
         
-    print('word_vocab shape is {}'.format(word_vocab.word_vecs.shape))
+    logger.info('word_vocab shape is {}'.format(word_vocab.word_vecs.shape))
     num_classes = label_vocab.size()
-    print("Number of labels: {}".format(num_classes))
+    logger.info("Number of labels: {}".format(num_classes))
     sys.stdout.flush()
 
-    print('Build SentenceMatchDataStream ... ')
+    logger.info('Build SentenceMatchDataStream ... ')
     trainDataStream = SentenceMatchDataStream(train_path, word_vocab=word_vocab, char_vocab=char_vocab, label_vocab=label_vocab,
                                               isShuffle=True, isLoop=True, isSort=True, options=FLAGS)
-    print('Number of instances in trainDataStream: {}'.format(trainDataStream.get_num_instance()))
-    print('Number of batches in trainDataStream: {}'.format(trainDataStream.get_num_batch()))
+    logger.info('Number of instances in trainDataStream: {}'.format(trainDataStream.get_num_instance()))
+    logger.info('Number of batches in trainDataStream: {}'.format(trainDataStream.get_num_batch()))
     sys.stdout.flush()
                                     
     devDataStream = SentenceMatchDataStream(dev_path, word_vocab=word_vocab, char_vocab=char_vocab, label_vocab=label_vocab,
                                               isShuffle=False, isLoop=True, isSort=True, options=FLAGS)
-    print('Number of instances in devDataStream: {}'.format(devDataStream.get_num_instance()))
-    print('Number of batches in devDataStream: {}'.format(devDataStream.get_num_batch()))
+    logger.info('Number of instances in devDataStream: {}'.format(devDataStream.get_num_instance()))
+    logger.info('Number of batches in devDataStream: {}'.format(devDataStream.get_num_batch()))
     sys.stdout.flush()
 
     init_scale = 0.01
@@ -334,7 +332,6 @@ def main(FLAGS):
             valid_graph = SentenceMatchModelGraph(num_classes, word_vocab=word_vocab, char_vocab=char_vocab,
                 is_training=False, options=FLAGS)
 
-                
         initializer = tf.global_variables_initializer()
         vars_ = {}
         for var in tf.global_variables():
@@ -346,9 +343,9 @@ def main(FLAGS):
         sess = tf.Session()
         sess.run(initializer)
         if has_pre_trained_model:
-            print("Restoring model from " + best_path)
+            logger.info("Restoring model from " + best_path)
             saver.restore(sess, best_path)
-            print("DONE!")
+            logger.info("DONE!")
 
         # training
         train(sess, saver, train_graph, valid_graph, trainDataStream, devDataStream, FLAGS, best_path)
@@ -398,7 +395,7 @@ if __name__ == '__main__':
 #     print("CUDA_VISIBLE_DEVICES " + os.environ['CUDA_VISIBLE_DEVICES'])
     args, unparsed = parser.parse_known_args()
     if args.config_path is not None:
-        print('Loading the configuration from ' + args.config_path)
+        logger.info('Loading the configuration from ' + args.config_path)
         FLAGS = namespace_utils.load_namespace(args.config_path)
     else:
         FLAGS = args
