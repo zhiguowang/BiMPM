@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 from tensorflow.python.ops import nn_ops
 
-def my_lstm_layer(input_reps, lstm_dim, input_lengths=None, scope_name=None, reuse=False, is_training=True,
+
+def my_lstm_layer(input_reps, lstm_dim, input_lengths=None,
+                  scope_name=None, reuse=False, is_training=True,
                   dropout_rate=0.2, use_cudnn=True):
     '''
     :param inputs: [batch_size, seq_len, feature_dim]
@@ -17,7 +20,7 @@ def my_lstm_layer(input_reps, lstm_dim, input_lengths=None, scope_name=None, reu
         if use_cudnn:
             inputs = tf.transpose(input_reps, [1, 0, 2])
             lstm = tf.contrib.cudnn_rnn.CudnnLSTM(1, lstm_dim, direction="bidirectional",
-                                    name="{}_cudnn_bi_lstm".format(scope_name), dropout=dropout_rate if is_training else 0)
+                                                  name="{}_cudnn_bi_lstm".format(scope_name),dropout=dropout_rate if is_training else 0)
             outputs, _ = lstm(inputs)
             outputs = tf.transpose(outputs, [1, 0, 2])
             f_rep = outputs[:, :, 0:lstm_dim]
@@ -37,6 +40,7 @@ def my_lstm_layer(input_reps, lstm_dim, input_lengths=None, scope_name=None, reu
             outputs = tf.concat(axis=2, values=[f_rep, b_rep])
     return (f_rep,b_rep, outputs)
 
+
 def dropout_layer(input_reps, dropout_rate, is_training=True):
     if is_training:
         output_repr = tf.nn.dropout(input_reps, (1 - dropout_rate))
@@ -44,7 +48,8 @@ def dropout_layer(input_reps, dropout_rate, is_training=True):
         output_repr = input_reps
     return output_repr
 
-def cosine_distance(y1,y2, cosine_norm=True, eps=1e-6):
+
+def cosine_distance(y1, y2, cosine_norm=True, eps=1e-6):
     # cosine_norm = True
     # y1 [....,a, 1, d]
     # y2 [....,1, b, d]
@@ -55,9 +60,11 @@ def cosine_distance(y1,y2, cosine_norm=True, eps=1e-6):
     y2_norm = tf.sqrt(tf.maximum(tf.reduce_sum(tf.square(y2), axis=-1), eps))
     return cosine_numerator / y1_norm / y2_norm
 
+
 def euclidean_distance(y1, y2, eps=1e-6):
     distance = tf.sqrt(tf.maximum(tf.reduce_sum(tf.square(y1 - y2), axis=-1), eps))
     return distance
+
 
 def cross_entropy(logits, truth, mask=None):
     # logits: [batch_size, passage_len]
@@ -69,6 +76,7 @@ def cross_entropy(logits, truth, mask=None):
     result = tf.multiply(truth, log_predictions) # [batch_size, passage_len]
     if mask is not None: result = tf.multiply(result, mask) # [batch_size, passage_len]
     return tf.multiply(-1.0,tf.reduce_sum(result, -1)) # [batch_size]
+
 
 def projection_layer(in_val, input_size, output_size, activation_func=tf.tanh, scope=None):
     # in_val: [batch_size, passage_len, dim]
@@ -83,6 +91,7 @@ def projection_layer(in_val, input_size, output_size, activation_func=tf.tanh, s
         outputs = activation_func(tf.nn.xw_plus_b(in_val, full_w, full_b))
     outputs = tf.reshape(outputs, [batch_size, passage_len, output_size])
     return outputs # [batch_size, passage_len, output_size]
+
 
 def highway_layer(in_val, output_size, activation_func=tf.tanh, scope=None):
     # in_val: [batch_size, passage_len, dim]
@@ -102,9 +111,10 @@ def highway_layer(in_val, output_size, activation_func=tf.tanh, scope=None):
     outputs = tf.reshape(outputs, [batch_size, passage_len, output_size])
     return outputs
 
+
 def multi_highway_layer(in_val, output_size, num_layers, activation_func=tf.tanh, scope_name=None, reuse=False):
     with tf.variable_scope(scope_name, reuse=reuse):
-        for i in xrange(num_layers):
+        for i in range(num_layers):
             cur_scope_name = scope_name + "-{}".format(i)
             in_val = highway_layer(in_val, output_size,activation_func=activation_func, scope=cur_scope_name)
     return in_val
@@ -141,7 +151,8 @@ def collect_probs(probs, positions):
 
 
 def calcuate_attention(in_value_1, in_value_2, feature_dim1, feature_dim2, scope_name='att',
-                       att_type='symmetric', att_dim=20, remove_diagnoal=False, mask1=None, mask2=None, is_training=False, dropout_rate=0.2):
+                       att_type='symmetric', att_dim=20, remove_diagnoal=False, mask1=None,
+                       mask2=None, is_training=False, dropout_rate=0.2):
     input_shape = tf.shape(in_value_1)
     batch_size = input_shape[0]
     len_1 = input_shape[1]

@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import re
+import jieba
+
+jieba.load_userdict('mydict/mydict.txt')
 
 def make_batches(size, batch_size):
     nb_batch = int(np.ceil(size/float(batch_size)))
@@ -8,7 +12,7 @@ def make_batches(size, batch_size):
 def pad_2d_vals(in_vals, dim1_size, dim2_size, dtype=np.int32):
     out_val = np.zeros((dim1_size, dim2_size), dtype=dtype)
     if dim1_size > len(in_vals): dim1_size = len(in_vals)
-    for i in xrange(dim1_size):
+    for i in range(dim1_size):
         cur_in_vals = in_vals[i]
         cur_dim2_size = dim2_size
         if cur_dim2_size > len(cur_in_vals): cur_dim2_size = len(cur_in_vals)
@@ -18,11 +22,11 @@ def pad_2d_vals(in_vals, dim1_size, dim2_size, dtype=np.int32):
 def pad_3d_vals(in_vals, dim1_size, dim2_size, dim3_size, dtype=np.int32):
     out_val = np.zeros((dim1_size, dim2_size, dim3_size), dtype=dtype)
     if dim1_size > len(in_vals): dim1_size = len(in_vals)
-    for i in xrange(dim1_size):
+    for i in range(dim1_size):
         in_vals_i = in_vals[i]
         cur_dim2_size = dim2_size
         if cur_dim2_size > len(in_vals_i): cur_dim2_size = len(in_vals_i)
-        for j in xrange(cur_dim2_size):
+        for j in range(cur_dim2_size):
             in_vals_ij = in_vals_i[j]
             cur_dim3_size = dim3_size
             if cur_dim3_size > len(in_vals_ij): cur_dim3_size = len(in_vals_ij)
@@ -39,12 +43,26 @@ def read_all_instances(inpath, word_vocab=None, label_vocab=None, char_vocab=Non
         idx += 1
         line = line.decode('utf-8').strip()
         if line.startswith('-'): continue
-        items = re.split("\t", line)
-        label = items[0]
-        sentence1 = items[1].strip()
-        sentence2 = items[2].strip()
-        cur_ID = "{}".format(idx)
-        if len(items)>=4: cur_ID = items[3]
+        items = line.split('\t')
+        # 统一处理输入数据
+        if len(items) > 3:
+            cur_ID, sentence1, sentence2, label = items[0], items[1], items[2], items[3]
+        else:
+            cur_ID, sentence1, sentence2, label = items[0], items[1], items[2], "1"
+        # 中文分词处理
+        sentence1 = sentence1.strip()
+        sentence2 = sentence2.strip()
+        stopwords = '，。！？*'
+        words1 = [w for w in jieba.cut(sentence1) if w.strip() and w not in stopwords]
+        words2 = [w for w in jieba.cut(sentence2) if w.strip() and w not in stopwords]
+        sentence1 = ' '.join(words1)
+        sentence2 = ' '.join(words2)
+        # items = re.split("\t", line)
+        # label = items[0]
+        # sentence1 = items[1].strip()
+        # sentence2 = items[2].strip()
+        # cur_ID = "{}".format(idx)
+        # if len(items)>=4: cur_ID = items[3]
         if isLower:
             sentence1 = sentence1.lower()
             sentence2 = sentence2.lower()
@@ -87,7 +105,7 @@ class SentenceMatchDataStream(object):
         self.batches = []
         for batch_index, (batch_start, batch_end) in enumerate(batch_spans):
             cur_instances = []
-            for i in xrange(batch_start, batch_end):
+            for i in range(batch_start, batch_end):
                 cur_instances.append(instances[i])
             cur_batch = InstanceBatch(cur_instances, with_char=options.with_char)
             self.batches.append(cur_batch)
@@ -101,7 +119,7 @@ class SentenceMatchDataStream(object):
         self.cur_pointer = 0
     
     def nextBatch(self):
-        if self.cur_pointer>=self.num_batch:
+        if self.cur_pointer >= self.num_batch:
             if not self.isLoop: return None
             self.cur_pointer = 0 
             if self.isShuffle: np.random.shuffle(self.index_array) 

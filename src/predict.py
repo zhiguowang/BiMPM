@@ -68,9 +68,8 @@ if __name__ == '__main__':
         print("Restoring model from " + best_path)
         saver.restore(sess, best_path)
         print("DONE!")
-        acc, F1_score = SentenceMatchTrainer.evaluation(sess, valid_graph, testDataStream, outpath=args.out_path,
+        result = SentenceMatchTrainer.predict(sess, valid_graph, testDataStream, outpath=args.out_path,
                                               label_vocab=label_vocab)
-        print("Accuracy: {}".format(acc))
-        print("F1_score: {}".format(F1_score))
+        print(result)
 
 
