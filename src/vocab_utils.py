@@ -38,7 +38,9 @@ class Vocab(object):
         
         self.vocab_size = len(voc) 
         self.word_dim = dim 
-        for word in voc:
+        temp_list = list(voc)
+        temp_list.sort()
+        for word in temp_list:
             cur_index = len(self.word2id)
             self.word2id[word] = cur_index 
             self.id2word[cur_index] = word
