@@ -130,7 +130,7 @@ class Vocab(object):
                 word = ' '
                 parts = [' '] + line.strip().split(' ')
             else:
-                parts = line.split(' ')
+                parts = line.rstrip().split(' ')
                 word = parts[0]
             self.word_dim = len(parts[1:])
             if (voc is not None) and (word not in voc): continue
