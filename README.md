@@ -23,22 +23,25 @@ For more details about the data format, you can download the [SNLI](https://driv
 
 
 ## Training
-You can find the training script at BiMPM/src/SentenceMatchTrainer.py
+You can find the training script at `BiMPM/src/SentenceMatchTrainer.py`
 
-First, edit the configuration file at ${workspace}/BiMPM/configs/snli.sample.config (or ${workspace}/BiMPM/configs/quora.sample.config ).
-You need to change the "train\_path", "dev\_path", "word\_vec\_path", "model\_dir", "suffix" to your own setting.
+First, edit the configuration file at `${workspace}/BiMPM/configs/snli.sample.config (or ${workspace}/BiMPM/configs/quora.sample.config )`.
+You need to change the `train\_path`, `dev\_path`, `word\_vec\_path`, `model\_dir`, `suffix` to your own setting.
 
 Second, launch job using the following command line
-> python  ${workspace}/BiMPM/SentenceMatchTrainer.py --config\_path ${workspace}/BiMPM/configs/snli.sample.config
-
+```
+python  ${workspace}/BiMPM/SentenceMatchTrainer.py --config\_path ${workspace}/BiMPM/configs/snli.sample.config
+```
 
 ## Testing
-You can find the testing script at BiMPM/src/SentenceMatchDecoder.py
-> python  ${workspace}/BiMPM/src/SentenceMatchDecoder.py --in\_path ${your\_path\_to}/dev.tsv --word\_vec\_path ${your\_path\_to}/wordvec.txt --out\_path ${your\_path\_to}/result.json --model\_prefix ${model\_dir}/SentenceMatch.${suffix}
+You can find the testing script at `BiMPM/src/SentenceMatchDecoder.py`
+```
+python  ${workspace}/BiMPM/src/SentenceMatchDecoder.py --in\_path ${your\_path\_to}/dev.tsv --word\_vec\_path ${your\_path\_to}/wordvec.txt --out\_path ${your\_path\_to}/result.json --model\_prefix ${model\_dir}/SentenceMatch.${suffix}
+```
 
-Where "model\_dir" and "suffix" are the variables set in your configuration file.
+Where `model\_dir` and `suffix` are the variables set in your configuration file.
 
-The output file is a json file with the follwing format.
+The output file is a json file with the following format.
 
 ```javascript
 {
