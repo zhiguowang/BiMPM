@@ -108,6 +108,7 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream, devDataStream,
         print('Evaluation time: %.3f sec' % (duration))
         if acc>= best_accuracy:
             best_accuracy = acc
+            saver.save(sess, best_path)
 
 
 def main(FLAGS):
