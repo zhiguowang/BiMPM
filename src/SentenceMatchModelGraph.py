@@ -49,12 +49,15 @@ class SentenceMatchModelGraph(object):
         if word_vocab is not None:
             word_vec_trainable = True
             cur_device = '/gpu:0'
-            if options.fix_word_vec:
-                word_vec_trainable = False
-                cur_device = '/cpu:0'
+            options.fix_word_vec = True
             with tf.device(cur_device):
                 self.word_embedding = tf.get_variable("word_embedding", trainable=word_vec_trainable, 
                                                   initializer=tf.constant(word_vocab.word_vecs), dtype=tf.float32)
+                with open('embedding.txt', 'w') as file_:
+                    for i in range(len(word_vocab)):
+                      embed = word_embedding[i, :]
+                      word = word_vocab[i]
+                      file_.write('%s %s\n' % (word, ' '.join(map(str, embed))))
 
             in_question_word_repres = tf.nn.embedding_lookup(self.word_embedding, self.in_question_words) # [batch_size, question_len, word_dim]
             in_passage_word_repres = tf.nn.embedding_lookup(self.word_embedding, self.in_passage_words) # [batch_size, passage_len, word_dim]
