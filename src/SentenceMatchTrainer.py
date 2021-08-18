@@ -7,7 +7,7 @@ import time
 import re
 import tensorflow as tf
 import json
-
+import numpy as np
 from vocab_utils import Vocab
 from SentenceMatchDataStream import SentenceMatchDataStream
 from SentenceMatchModelGraph import SentenceMatchModelGraph
@@ -109,6 +109,12 @@ def train(sess, saver, train_graph, valid_graph, trainDataStream, devDataStream,
         if acc>= best_accuracy:
             best_accuracy = acc
             saver.save(sess, best_path)
+            #saving embeddings
+            embeddings = feed_dict.get_layer('embeddings').get_weights()[0]
+            custom_embedding = {}
+            for word, index in feed_dict:
+                custom_embedding[word] = embeddings[index]
+            np.savez('embeddings.npz', **custom_embedding)
 
 
 def main(FLAGS):
